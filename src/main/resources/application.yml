@@ -12,8 +12,5 @@ spring:
       max-create-connection-time: 2s
       validation-query: SELECT 1
 
-technology:
-  base:
-    url: http://localhost:8080
 server:
   port: 8081
