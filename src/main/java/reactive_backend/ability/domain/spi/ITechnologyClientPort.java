@@ -9,4 +9,5 @@ public interface ITechnologyClientPort {
     Mono<List<Technology>> findTechnologiesByNames(List<String> names);
 
     Mono<Void> linkTechnologiesToAbility(Integer id, List<Technology> technologies);
+    Mono<List<Technology>> getAllTechnologiesByAbilityId(Integer id);
 }
