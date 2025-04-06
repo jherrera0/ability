@@ -15,13 +15,12 @@ import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
 public class AbilityCase implements IAbilityServicePort {
     private final IAbilityPersistencePort abilityPersistencePort;
     private final ITechnologyClientPort technologyClientPort;
-    static Logger logger = Logger.getLogger(AbilityCase.class.getName());
+
     public AbilityCase(IAbilityPersistencePort abilityPersistencePort,
                        ITechnologyClientPort technologyClientPort) {
         this.abilityPersistencePort = abilityPersistencePort;
