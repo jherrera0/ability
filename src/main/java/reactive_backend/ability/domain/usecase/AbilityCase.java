@@ -99,7 +99,6 @@ public class AbilityCase implements IAbilityServicePort {
                                                 return Mono.just(pageCustom);
                                             });
                                 }
-
                                 return Mono.just(pageCustom);
                             });
                 });

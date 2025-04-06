@@ -2,74 +2,150 @@ package reactive_backend.ability.application.client.adapter;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.web.reactive.function.client.*;
+import org.mockito.ArgumentCaptor;
+import org.springframework.web.reactive.function.client.WebClient;
+import reactive_backend.ability.application.http.dto.request.AddAbilityDtoRequest;
+import reactive_backend.ability.application.http.dto.request.GetByNameRequest;
 import reactive_backend.ability.domain.model.Technology;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
+import java.util.Arrays;
 import java.util.List;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
 
 class TechnologyClientTest {
 
-    private WebClient webClient;
+    private WebClient webClientMock;
+    private WebClient.RequestHeadersUriSpec requestHeadersUriSpecMock;
+    private WebClient.RequestBodyUriSpec requestBodyUriSpecMock;
+    private WebClient.RequestHeadersSpec requestHeadersSpecMock;
+    private WebClient.RequestBodySpec requestBodySpecMock;
+    private WebClient.ResponseSpec responseSpecMock;
     private TechnologyClient technologyClient;
-    private WebClient.RequestBodyUriSpec requestBodyUriSpec;
-    private WebClient.RequestBodySpec requestBodySpec;
-    private WebClient.RequestHeadersSpec<?> requestHeadersSpec;
-    private WebClient.ResponseSpec responseSpec;
 
     @BeforeEach
     void setUp() {
+        // Mocks
         WebClient.Builder webClientBuilder = mock(WebClient.Builder.class);
-        webClient = mock(WebClient.class);
-        requestBodyUriSpec = mock(WebClient.RequestBodyUriSpec.class);
-        requestBodySpec = mock(WebClient.RequestBodySpec.class);
-        requestHeadersSpec = (WebClient.RequestHeadersSpec<?>) mock(WebClient.RequestHeadersSpec.class);
-        responseSpec = mock(WebClient.ResponseSpec.class);
+        webClientMock = mock(WebClient.class);
+        requestHeadersUriSpecMock = mock(WebClient.RequestHeadersUriSpec.class);
+        requestHeadersSpecMock = mock(WebClient.RequestHeadersSpec.class);
+        responseSpecMock = mock(WebClient.ResponseSpec.class);
+        requestBodyUriSpecMock = mock(WebClient.RequestBodyUriSpec.class);
+        requestBodySpecMock = mock(WebClient.RequestBodySpec.class);
 
-        // Simula la cadena de construcción de WebClient
+        // Configure mock chain
         when(webClientBuilder.baseUrl(anyString())).thenReturn(webClientBuilder);
-        when(webClientBuilder.build()).thenReturn(webClient);
+        when(webClientBuilder.build()).thenReturn(webClientMock);
+        when(webClientMock.get()).thenReturn(requestHeadersUriSpecMock);
 
-        // Instanciar el objeto bajo prueba con el WebClient mockeado
+        // Inject client with mocked builder
         technologyClient = new TechnologyClient(webClientBuilder);
     }
-
-
     @Test
-    void findTechnologiesByNames_shouldReturnTechnologies() {
-        List<String> names = List.of("Java", "Spring");
-        List<Technology> technologies = List.of(new Technology(1,"Java","Java"),
-                new Technology(2,"Spring","Spring"));
+    void findTechnologiesByNames_shouldCallCorrectEndpointWithCorrectBody() {
+        // Arrange
+        List<String> techNames = Arrays.asList("Java", "Spring");
+        List<Technology> expectedTechnologies = Arrays.asList(
+                new Technology(1, "Java","Java"),
+                new Technology(2, "Spring","Spring")
+        );
 
-        when(webClient.post()).thenReturn(requestBodyUriSpec);
-        when(requestBodyUriSpec.uri("/technology/getByName")).thenReturn(requestBodySpec);
-        doReturn(requestHeadersSpec).when(requestBodySpec).bodyValue(any());
-        when(requestHeadersSpec.retrieve()).thenReturn(responseSpec);
-        when(responseSpec.bodyToFlux(Technology.class)).thenReturn(Flux.fromIterable(technologies));
+        ArgumentCaptor<GetByNameRequest> requestCaptor = ArgumentCaptor.forClass(GetByNameRequest.class);
 
-        StepVerifier.create(technologyClient.findTechnologiesByNames(names))
-                .expectNext(technologies)
+        when(webClientMock.post()).thenReturn(requestBodyUriSpecMock);
+        when(requestBodyUriSpecMock.uri("/technology/getByName")).thenReturn(requestBodySpecMock);
+        when(requestBodySpecMock.bodyValue(requestCaptor.capture())).thenReturn(requestHeadersSpecMock);
+        when(requestHeadersSpecMock.retrieve()).thenReturn(responseSpecMock);
+        when(responseSpecMock.bodyToFlux(Technology.class)).thenReturn(Flux.fromIterable(expectedTechnologies));
+
+        // Act
+        Mono<List<Technology>> result = technologyClient.findTechnologiesByNames(techNames);
+
+        // Assert
+        StepVerifier.create(result)
+                .expectNext(expectedTechnologies)
                 .verifyComplete();
+
+        GetByNameRequest capturedRequest = requestCaptor.getValue();
+        assertEquals(techNames, capturedRequest.getNames());
+
+        verify(webClientMock).post();
+        verify(requestBodyUriSpecMock).uri("/technology/getByName");
+        verify(requestBodySpecMock).bodyValue(any(GetByNameRequest.class));
+        verify(requestHeadersSpecMock).retrieve();
+        verify(responseSpecMock).bodyToFlux(Technology.class);
     }
 
     @Test
-    void linkTechnologiesToAbility_shouldReturnVoid() {
+    void linkTechnologiesToAbility_shouldCallCorrectEndpointWithCorrectBody() {
+        // Arrange
         Integer abilityId = 1;
-        List<Technology> technologies = List.of(new Technology(1,"React","React"),
-                new Technology(2,"Angular","Angular"));
+        List<Technology> technologies = Arrays.asList(
+                new Technology(1, "Java", "Java"),
+                new Technology(2, "Spring", "Spring")
+        );
 
-        when(webClient.post()).thenReturn(requestBodyUriSpec);
-        when(requestBodyUriSpec.uri("/technology/addAbility")).thenReturn(requestBodySpec);
-        doReturn(requestHeadersSpec).when(requestBodySpec).bodyValue(any());
-        when(requestHeadersSpec.retrieve()).thenReturn(responseSpec);
-        when(responseSpec.bodyToMono(Void.class)).thenReturn(Mono.empty());
+        ArgumentCaptor<AddAbilityDtoRequest> requestCaptor = ArgumentCaptor.forClass(AddAbilityDtoRequest.class);
 
-        StepVerifier.create(technologyClient.linkTechnologiesToAbility(abilityId, technologies))
+        when(webClientMock.post()).thenReturn(requestBodyUriSpecMock);
+        when(requestBodyUriSpecMock.uri("/technology/addAbility")).thenReturn(requestBodySpecMock);
+        when(requestBodySpecMock.bodyValue(requestCaptor.capture())).thenReturn(requestHeadersSpecMock);
+        when(requestHeadersSpecMock.retrieve()).thenReturn(responseSpecMock);
+        when(responseSpecMock.bodyToMono(Void.class)).thenReturn(Mono.empty());
+
+        // Act
+        Mono<Void> result = technologyClient.linkTechnologiesToAbility(abilityId, technologies);
+
+        // Assert
+        StepVerifier.create(result)
                 .verifyComplete();
+
+        AddAbilityDtoRequest capturedRequest = requestCaptor.getValue();
+        assertEquals(abilityId, capturedRequest.getAbilityId());
+        assertSame(technologies, capturedRequest.getTechnologies());
+
+        verify(webClientMock).post();
+        verify(requestBodyUriSpecMock).uri("/technology/addAbility");
+        verify(requestBodySpecMock).bodyValue(any(AddAbilityDtoRequest.class));
+        verify(requestHeadersSpecMock).retrieve();
+        verify(responseSpecMock).bodyToMono(Void.class);
     }
+
+    @Test
+    void getAllTechnologiesByAbilityId_shouldCallCorrectEndpoint() {
+        // Arrange
+        Integer abilityId = 1;
+        List<Technology> expectedTechnologies = Arrays.asList(
+                new Technology(1, "Java","java"),
+                new Technology(2, "Spring", "spring")
+        );
+
+        when(webClientMock.get()).thenReturn(requestHeadersUriSpecMock);
+        when(requestHeadersUriSpecMock.uri("/technology/getAllByAbilityId?id={id}", abilityId))
+                .thenReturn(requestHeadersSpecMock);
+        when(requestHeadersSpecMock.retrieve()).thenReturn(responseSpecMock);
+        when(responseSpecMock.bodyToFlux(Technology.class)).thenReturn(Flux.fromIterable(expectedTechnologies));
+
+        // Act
+        Mono<List<Technology>> result = technologyClient.getAllTechnologiesByAbilityId(abilityId);
+
+        // Assert
+        StepVerifier.create(result)
+                .expectNext(expectedTechnologies)
+                .verifyComplete();
+
+        verify(webClientMock).get();
+        verify(requestHeadersUriSpecMock).uri("/technology/getAllByAbilityId?id={id}", abilityId);
+        verify(requestHeadersSpecMock).retrieve();
+        verify(responseSpecMock).bodyToFlux(Technology.class);
+    }
+
 }
