@@ -7,6 +7,7 @@ public class ConstExceptions {
     public static final String ABILITY_TECHNOLOGY_DUPLICATE_EXCEPTION = "The technology names are duplicate";
     public static final String ABILITY_NAME_EMPTY_EXCEPTION = "The ability name must not be empty";
     public static final String ABILITY_DESCRIPTION_EMPTY_EXCEPTION = "The ability description must not be empty";
+    public static final String ABILITY_TECHNOLOGY_NOT_FOUND_EXCEPTION = "The technology name does not exist: ";
 
 
     private ConstExceptions() {

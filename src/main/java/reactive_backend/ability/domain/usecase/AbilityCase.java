@@ -1,10 +1,7 @@
 package reactive_backend.ability.domain.usecase;
 
 import reactive_backend.ability.domain.api.IAbilityServicePort;
-import reactive_backend.ability.domain.exception.AbilityDescriptionEmptyException;
-import reactive_backend.ability.domain.exception.AbilityNameEmptyException;
-import reactive_backend.ability.domain.exception.AbilityTechnologyDuplicateException;
-import reactive_backend.ability.domain.exception.AbilityTechnologySizeException;
+import reactive_backend.ability.domain.exception.*;
 import reactive_backend.ability.domain.model.Ability;
 import reactive_backend.ability.domain.model.Technology;
 import reactive_backend.ability.domain.spi.IAbilityPersistencePort;
@@ -50,7 +47,7 @@ public class AbilityCase implements IAbilityServicePort {
                             .toList();
 
                     if (!notFound.isEmpty()) {
-                        return Mono.error(new RuntimeException("Technologies not found: " + notFound));
+                        return Mono.error(new AbilityTechnologyNotFoundException(notFound));
                     }
 
                     // Guardar el Ability
