@@ -41,4 +41,13 @@ public class TechnologyClient implements ITechnologyClientPort {
                 .bodyToMono(Void.class)
                 .then();
     }
+
+    @Override
+    public Mono<List<Technology>> getAllTechnologiesByAbilityId(Integer id) {
+        return webClient.get()
+                .uri("/technology/getAllByAbilityId?id={id}", id)
+                .retrieve()
+                .bodyToFlux(Technology.class)
+                .collectList();
+    }
 }

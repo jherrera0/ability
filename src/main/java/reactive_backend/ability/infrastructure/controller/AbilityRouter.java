@@ -16,6 +16,8 @@ public class AbilityRouter {
     @Bean
     public RouterFunction<ServerResponse> abilityRoutes(IAbilityHandler abilityHandler) {
         return route(POST(ConstRoute.ABILITY_REST_ROUTE + ConstRoute.CREATE_ABILITY_REST_ROUTE),
-                abilityHandler::createAbility);
+                abilityHandler::createAbility)
+                .andRoute(POST(ConstRoute.ABILITY_REST_ROUTE + ConstRoute.LIST_ABILITY_REST_ROUTE),
+                        abilityHandler::getAllAbilities);
     }
 }

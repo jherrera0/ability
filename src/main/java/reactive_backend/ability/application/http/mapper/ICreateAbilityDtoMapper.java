@@ -20,6 +20,7 @@ public interface ICreateAbilityDtoMapper {
     @Mapping(target = "technologies", source = "technologiesNames")
     Ability toAbility(CreateAbilityDtoRequest createAbilityDto);
 
+    @Mapping(target = "technologies", source = "technologies")
     AbilityDtoResponse toDtoResponse(Ability ability);
 
     default List<Technology> map(List<String> names) {

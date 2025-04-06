@@ -8,19 +8,29 @@ import org.mockito.MockitoAnnotations;
 import org.springframework.web.reactive.function.server.ServerRequest;
 import org.springframework.web.reactive.function.server.ServerResponse;
 import reactive_backend.ability.application.http.dto.request.CreateAbilityDtoRequest;
+import reactive_backend.ability.application.http.dto.request.ListAbilitiesRequest;
+import reactive_backend.ability.application.http.dto.response.AbilityCustomDtoResponse;
 import reactive_backend.ability.application.http.dto.response.AbilityDtoResponse;
+import reactive_backend.ability.application.http.dto.response.PageResponse;
 import reactive_backend.ability.application.http.mapper.ICreateAbilityDtoMapper;
+import reactive_backend.ability.application.http.mapper.IPageResponseMapper;
 import reactive_backend.ability.domain.api.IAbilityServicePort;
 import reactive_backend.ability.domain.model.Ability;
+import reactive_backend.ability.domain.model.PageCustom;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
+import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.when;
 
 class AbilityHandlerTest {
 
     @Mock
     private IAbilityServicePort abilityServicePort;
+
+    @Mock
+    private IPageResponseMapper pageResponseMapper;
 
     @Mock
     private ICreateAbilityDtoMapper createAbilityDtoMapper;
@@ -80,6 +90,50 @@ class AbilityHandlerTest {
 
         StepVerifier.create(response)
                 .expectNextMatches(serverResponse -> serverResponse.statusCode().is4xxClientError())
+                .verifyComplete();
+    }
+    @Test
+    void getAllAbilities_shouldReturnBadRequest_whenServiceThrowsException() {
+        ListAbilitiesRequest dtoRequest = new ListAbilitiesRequest();
+
+        when(serverRequest.bodyToMono(ListAbilitiesRequest.class)).thenReturn(Mono.just(dtoRequest));
+        when(abilityServicePort.getAllAbilities(anyInt(), anyInt(), anyString(), anyString()))
+                .thenReturn(Mono.error(new RuntimeException("Service error")));
+
+        Mono<ServerResponse> response = abilityHandler.getAllAbilities(serverRequest);
+
+        StepVerifier.create(response)
+                .expectNextMatches(serverResponse -> serverResponse.statusCode().is4xxClientError())
+                .verifyComplete();
+    }
+
+    @Test
+    void getAllAbilities_shouldReturnBadRequest_whenRequestBodyIsEmpty() {
+        when(serverRequest.bodyToMono(ListAbilitiesRequest.class)).thenReturn(Mono.empty());
+
+        Mono<ServerResponse> response = abilityHandler.getAllAbilities(serverRequest);
+
+        StepVerifier.create(response)
+                .expectNextMatches(serverResponse -> serverResponse.statusCode().is4xxClientError())
+                .verifyComplete();
+    }
+
+    @Test
+    void getAllAbilities_shouldReturnOk_whenRequestIsValid() {
+        ListAbilitiesRequest dtoRequest = new ListAbilitiesRequest("asc",
+                "name", 0, 10);
+        PageCustom<Ability> pageCustom = new PageCustom<>();
+        PageResponse<AbilityCustomDtoResponse> pageResponse = new PageResponse<>();
+
+        when(serverRequest.bodyToMono(ListAbilitiesRequest.class)).thenReturn(Mono.just(dtoRequest));
+        when(abilityServicePort.getAllAbilities(anyInt(), anyInt(), anyString(), anyString()))
+                .thenReturn(Mono.just(pageCustom));
+        when(pageResponseMapper.toPageResponse(pageCustom)).thenReturn(pageResponse);
+
+        Mono<ServerResponse> response = abilityHandler.getAllAbilities(serverRequest);
+
+        StepVerifier.create(response)
+                .expectNextMatches(serverResponse -> serverResponse.statusCode().is2xxSuccessful())
                 .verifyComplete();
     }
 }
