@@ -79,4 +79,36 @@ class AbilityJpaAdapterTest {
                 .verifyComplete();
     }
 
+    @Test
+    void getAbilitiesById_shouldReturnEmptyList_whenNoAbilitiesFound() {
+        List<Integer> abilityIds = List.of(1, 2, 3);
+
+        when(abilityRepository.findAllByIdIsIn(abilityIds)).thenReturn(Flux.empty());
+
+        Mono<List<Ability>> result = abilityJpaAdapter.getAbilitiesById(abilityIds);
+
+        StepVerifier.create(result)
+                .expectNext(List.of())
+                .verifyComplete();
+    }
+
+    @Test
+    void getAbilitiesById_shouldReturnAbilities_whenAbilitiesExist() {
+        List<Integer> abilityIds = List.of(1, 2, 3);
+        List<AbilityEntity> abilityEntities = List.of(new AbilityEntity(1,"",""),
+                new AbilityEntity(2,"",""),
+                new AbilityEntity(3,"",""));
+        List<Ability> abilities = List.of(new Ability(1,"","",List.of()),
+                new Ability(2,"","",List.of()),
+                new Ability(3,"","",List.of()));
+
+        when(abilityRepository.findAllByIdIsIn(abilityIds)).thenReturn(Flux.fromIterable(abilityEntities));
+        when(abilityEntityMapper.toDomainList(abilityEntities)).thenReturn(abilities);
+
+        Mono<List<Ability>> result = abilityJpaAdapter.getAbilitiesById(abilityIds);
+
+        StepVerifier.create(result)
+                .expectNext(abilities)
+                .verifyComplete();
+    }
 }
