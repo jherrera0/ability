@@ -38,7 +38,7 @@ public class AbilityJpaAdapter implements IAbilityPersistencePort {
     }
 
     @Override
-    public Mono<List<Ability>> getAbilitiesById(List<Integer> abilities) {
+    public Mono<List<Ability>>  getAbilitiesById(List<Integer> abilities) {
         return abilityRepository.findAllByIdIsIn(abilities)
                 .collectList()
                 .map(abilityEntityMapper::toDomainList);
