@@ -39,4 +39,27 @@ public class BootcampHandler implements IBootcampHandler {
                 });
     }
 
+    @Override
+    public Mono<ServerResponse> getAllBootcamps(ServerRequest request) {
+        log.info("ID de habilidad recibido desde Postman: {}", request.queryParams());
+        int id = request.queryParam("id").isPresent()?
+                Integer.parseInt(request.queryParam("id").get()) : 0;
+        return bootcampServicePort.getAllAbilitiesByBootcampId(id)
+                .doOnNext(dto -> log.info("Datos recibidos desde Postman para obtener bootcamps: {}",
+                        dto))
+                .flatMap(list -> ServerResponse.ok()
+                        .contentType(org.springframework.http.MediaType.APPLICATION_JSON)
+                        .bodyValue(list)
+                )
+                .onErrorResume(error -> {
+                    log.error("Error al procesar la solicitud de obtener bootcamps: {}", error.getMessage());
+                    return ServerResponse.badRequest()
+                            .contentType(org.springframework.http.MediaType.APPLICATION_JSON)
+                            .bodyValue(Map.of(
+                                    "error", error.getMessage(),
+                                    "timestamp", java.time.Instant.now()
+                            ));
+                });
+    }
+
 }
