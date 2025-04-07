@@ -8,6 +8,7 @@ import reactive_backend.ability.application.http.handler.IAbilityHandler;
 import reactive_backend.ability.application.http.handler.IBootcampHandler;
 import reactive_backend.ability.domain.util.ConstRoute;
 
+import static org.springframework.web.reactive.function.server.RequestPredicates.GET;
 import static org.springframework.web.reactive.function.server.RequestPredicates.POST;
 import static org.springframework.web.reactive.function.server.RouterFunctions.route;
 
@@ -23,7 +24,9 @@ public class AbilityRouter {
                 .andRoute(POST(ConstRoute.ABILITY_REST_ROUTE + ConstRoute.FIND_ABILITY_BY_ID_REST_ROUTE),
                         abilityHandler::getAbilityById)
                 .andRoute(POST(ConstRoute.BOOTCAMP_REST_ROUTE + ConstRoute.ADD_BOOTCAMP_REST_ROUTE),
-                        bootcampHandler::addBootcamp);
+                        bootcampHandler::addBootcamp)
+                .andRoute(GET(ConstRoute.BOOTCAMP_REST_ROUTE + ConstRoute.GET_ALL_BY_BOOTCAMP_ID_REST_ROUTE),
+                        bootcampHandler::getAllBootcamps);
 
     }
 }
