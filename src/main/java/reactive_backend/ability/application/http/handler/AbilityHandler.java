@@ -7,7 +7,9 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.server.ServerRequest;
 import org.springframework.web.reactive.function.server.ServerResponse;
 import reactive_backend.ability.application.http.dto.request.CreateAbilityDtoRequest;
+import reactive_backend.ability.application.http.dto.request.GetAbilitiesByIdsDtoRequest;
 import reactive_backend.ability.application.http.dto.request.ListAbilitiesRequest;
+import reactive_backend.ability.application.http.mapper.IAbilityResponseMapper;
 import reactive_backend.ability.application.http.mapper.ICreateAbilityDtoMapper;
 import reactive_backend.ability.application.http.mapper.IPageResponseMapper;
 import reactive_backend.ability.domain.api.IAbilityServicePort;
@@ -24,6 +26,7 @@ public class AbilityHandler implements IAbilityHandler{
     private final IAbilityServicePort abilityServicePort;
     private final ICreateAbilityDtoMapper createAbilityDtoMapper;
     private final IPageResponseMapper pageResponseMapper;
+    private final IAbilityResponseMapper abilityResponseMapper;
 
     @Override
     public Mono<ServerResponse> createAbility(ServerRequest request) {
@@ -73,5 +76,30 @@ public class AbilityHandler implements IAbilityHandler{
                             ));}
 
                 );
+    }
+
+    @Override
+    public Mono<ServerResponse> getAbilityById(ServerRequest request) {
+        return request.bodyToMono(GetAbilitiesByIdsDtoRequest.class)
+                .doOnNext(dto ->
+                        log.info("Datos recibidos desde Postman para buscar por id: {}", dto))
+                .switchIfEmpty(Mono.error(new IllegalArgumentException("Request body cannot be empty")))
+                .flatMap(dto -> abilityServicePort.getAbilityById(dto.getIds()))
+                .map(abilityResponseMapper::toDtoResponseList)
+                .doOnNext(response ->
+                        log.info("Datos a devolver en respuesta de la busqueda por id: {}", response))
+                .flatMap(response -> ServerResponse.ok()
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .bodyValue(response)
+                )
+                .onErrorResume(error -> {
+                    log.error("Error al procesar la solicitud de busqueda por id: {}", error.getMessage());
+                    return ServerResponse.badRequest()
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .bodyValue(Map.of(
+                                    "error", error.getMessage(),
+                                    "timestamp", Instant.now()
+                            ));
+                });
     }
 }

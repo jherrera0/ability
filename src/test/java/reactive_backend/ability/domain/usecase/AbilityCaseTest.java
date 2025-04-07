@@ -240,4 +240,27 @@ class AbilityCaseTest {
                 .expectError(ListAbilityPageSizeInvalidException.class)
                 .verify();
     }
+
+    @Test
+    void getAbilityByIdShouldReturnAbility() {
+        Ability ability = new Ability(1, "Ability1", "Description1", List.of());
+        when(abilityPersistencePort.getAbilitiesById(any(List.class)))
+                .thenReturn(Mono.just(List.of(ability)));
+        when(technologyClientPort.getAllTechnologiesByAbilityId(anyInt()))
+                .thenReturn(Mono.just(List.of(new Technology(1, "Tech1", "tech1"))));
+
+        StepVerifier.create(abilityServicePort.getAbilityById(List.of(1)))
+                .expectNextMatches(result -> result.get(0).getName().equals("Ability1"))
+                .verifyComplete();
+    }
+
+    @Test
+    void getAbilityByIdShouldReturnEmptyListWhenNoAbilitiesFound() {
+        when(abilityPersistencePort.getAbilitiesById(any(List.class)))
+                .thenReturn(Mono.just(List.of()));
+
+        StepVerifier.create(abilityServicePort.getAbilityById(List.of(1, 2, 3)))
+                .expectNext(List.of())
+                .verifyComplete();
+    }
 }

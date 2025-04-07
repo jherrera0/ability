@@ -5,6 +5,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.web.reactive.function.server.RouterFunction;
 import org.springframework.web.reactive.function.server.ServerResponse;
 import reactive_backend.ability.application.http.handler.IAbilityHandler;
+import reactive_backend.ability.application.http.handler.IBootcampHandler;
 import reactive_backend.ability.domain.util.ConstRoute;
 
 import static org.springframework.web.reactive.function.server.RequestPredicates.POST;
@@ -14,10 +15,15 @@ import static org.springframework.web.reactive.function.server.RouterFunctions.r
 public class AbilityRouter {
 
     @Bean
-    public RouterFunction<ServerResponse> abilityRoutes(IAbilityHandler abilityHandler) {
+    public RouterFunction<ServerResponse> abilityRoutes(IAbilityHandler abilityHandler, IBootcampHandler bootcampHandler) {
         return route(POST(ConstRoute.ABILITY_REST_ROUTE + ConstRoute.CREATE_ABILITY_REST_ROUTE),
                 abilityHandler::createAbility)
                 .andRoute(POST(ConstRoute.ABILITY_REST_ROUTE + ConstRoute.LIST_ABILITY_REST_ROUTE),
-                        abilityHandler::getAllAbilities);
+                        abilityHandler::getAllAbilities)
+                .andRoute(POST(ConstRoute.ABILITY_REST_ROUTE + ConstRoute.FIND_ABILITY_BY_ID_REST_ROUTE),
+                        abilityHandler::getAbilityById)
+                .andRoute(POST(ConstRoute.BOOTCAMP_REST_ROUTE + ConstRoute.ADD_BOOTCAMP_REST_ROUTE),
+                        bootcampHandler::addBootcamp);
+
     }
 }

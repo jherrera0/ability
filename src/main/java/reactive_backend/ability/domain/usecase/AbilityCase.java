@@ -104,6 +104,19 @@ public class AbilityCase implements IAbilityServicePort {
                 });
     }
 
+    @Override
+    public Mono<List<Ability>> getAbilityById(List<Integer> ids) {
+        return abilityPersistencePort.getAbilitiesById(ids)
+                .flatMapMany(Flux::fromIterable)
+                .flatMapSequential(ability ->
+                        technologyClientPort.getAllTechnologiesByAbilityId(ability.getId())
+                                .flatMap(technologies -> {
+                                    ability.setTechnologies(technologies);
+                                    return Mono.just(ability);
+                                })
+                ).collectList();
+    }
+
 
     private static Mono<List<Ability>> sortByField(List<Ability> abilities, String sortField,
                                                    String orderDirection) {
