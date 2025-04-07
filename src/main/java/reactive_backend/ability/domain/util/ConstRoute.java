@@ -9,8 +9,10 @@ public class ConstRoute {
 
     public static final String BOOTCAMP_REST_ROUTE = "/bootcamp";
     public static final String ADD_BOOTCAMP_REST_ROUTE = "/addBootcamp";
+    public static final String GET_ALL_BY_BOOTCAMP_ID_REST_ROUTE = "/getAllAbilitiesByBootcampId";
 
     public static final String TECHNOLOGY = "http://localhost:8080";
+
 
 
     private ConstRoute() {
