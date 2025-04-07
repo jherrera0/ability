@@ -10,6 +10,8 @@ import reactive_backend.ability.domain.model.PageCustom;
 import reactive_backend.ability.domain.spi.IAbilityPersistencePort;
 import reactor.core.publisher.Mono;
 
+import java.util.List;
+
 @AllArgsConstructor
 public class AbilityJpaAdapter implements IAbilityPersistencePort {
     private final IAbilityRepository abilityRepository;
@@ -33,5 +35,12 @@ public class AbilityJpaAdapter implements IAbilityPersistencePort {
                         abilityEntityMapper.toDomainList(tuple.getT1())
                 ));
 
+    }
+
+    @Override
+    public Mono<List<Ability>> getAbilitiesById(List<Integer> abilities) {
+        return abilityRepository.findAllByIdIsIn(abilities)
+                .collectList()
+                .map(abilityEntityMapper::toDomainList);
     }
 }
